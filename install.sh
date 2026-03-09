@@ -2,80 +2,94 @@
 
 clear
 echo "================================="
-echo "   NetMod VPN SSH Panel Install"
+echo "     ZAW NETMOD VPN INSTALL"
 echo "================================="
 
-# Update
+# Update server
 apt update -y
 apt upgrade -y
 
-# Install SSH
-apt install -y openssh-server
+# Install packages
+apt install -y openssh-server curl wget cron
+
 systemctl enable ssh
-systemctl start ssh
+systemctl restart ssh
 
-# Install tools
-apt install -y curl wget cron
-
-# Get IP
 IP=$(curl -s ifconfig.me)
 
 # Create menu
-cat > /usr/bin/menu << END
+cat > /usr/bin/menu << 'EOF'
 #!/bin/bash
+
+IP=$(curl -s ifconfig.me)
+
 clear
-echo "=============================="
-echo "      NETMOD VPN PANEL"
-echo "=============================="
+echo "================================="
+echo "        ZAW VPS PANEL"
+echo "================================="
 echo "1. Create SSH Account"
 echo "2. Create Trial Account"
-echo "3. Delete User"
-echo "4. Check Login User"
+echo "3. Delete SSH User"
+echo "4. List SSH Users"
 echo "5. Restart SSH"
+echo "6. Server Info"
 echo "0. Exit"
-echo "=============================="
+echo "================================="
 read -p "Select Menu : " menu
 
-case \$menu in
+case $menu in
+
 1)
 read -p "Username : " user
 read -p "Password : " pass
 read -p "Expired (days): " days
-useradd -e \$(date -d "\$days days" +"%Y-%m-%d") -s /bin/false -M \$user
-echo "\$user:\$pass" | chpasswd
 
+exp=$(date -d "$days days" +"%Y-%m-%d")
+
+useradd -e $exp -s /bin/false -M $user
+echo "$user:$pass" | chpasswd
+
+clear
 echo "=============================="
-echo "SSH ACCOUNT CREATED"
+echo " SSH ACCOUNT CREATED"
+echo "=============================="
 echo "Host : $IP"
 echo "Port : 22"
-echo "Username : \$user"
-echo "Password : \$pass"
+echo "Username : $user"
+echo "Password : $pass"
+echo "Expire : $exp"
 echo "=============================="
 ;;
 
 2)
-user=trial\$(tr -dc A-Z0-9 </dev/urandom | head -c4)
+user=trial$(tr -dc A-Z0-9 </dev/urandom | head -c4)
 pass=123
-useradd -e \$(date -d "1 day" +"%Y-%m-%d") -s /bin/false -M \$user
-echo "\$user:\$pass" | chpasswd
+exp=$(date -d "1 day" +"%Y-%m-%d")
 
+useradd -e $exp -s /bin/false -M $user
+echo "$user:$pass" | chpasswd
+
+clear
 echo "=============================="
-echo "TRIAL ACCOUNT"
+echo " TRIAL ACCOUNT"
+echo "=============================="
 echo "Host : $IP"
 echo "Port : 22"
-echo "Username : \$user"
-echo "Password : \$pass"
+echo "Username : $user"
+echo "Password : $pass"
+echo "Expire : $exp"
 echo "=============================="
 ;;
 
 3)
-read -p "Username : " user
-userdel \$user
+read -p "Input Username : " user
+userdel $user
 echo "User Deleted"
 ;;
 
 4)
-who
+echo "==== SSH USERS ===="
+cut -d: -f1 /etc/passwd
 ;;
 
 5)
@@ -83,23 +97,29 @@ systemctl restart ssh
 echo "SSH Restarted"
 ;;
 
+6)
+echo "Server IP : $IP"
+echo "SSH Port : 22"
+;;
+
 0)
 exit
 ;;
 
 *)
-echo "Invalid"
+echo "Wrong Input"
 ;;
+
 esac
-END
+EOF
 
 chmod +x /usr/bin/menu
 
 clear
 echo "================================="
-echo "INSTALL COMPLETE"
+echo " INSTALL COMPLETE"
 echo "================================="
 echo "Command : menu"
 echo "Server IP : $IP"
-echo "SSH Port : 22"
+echo "Port : 22"
 echo "================================="
