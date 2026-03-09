@@ -1,75 +1,86 @@
 #!/bin/bash
 
-# Root Check
-if [ "$(id -u)" != "0" ]; then
-echo "Please run as root"
-exit 1
-fi
-
 clear
 echo "================================="
-echo "      ZAW VPS INSTALLER"
+echo "   NetMod VPN SSH Panel Install"
 echo "================================="
-sleep 2
 
-# Update system
+# Update
 apt update -y
 apt upgrade -y
 
-# Install required packages
-apt install wget curl figlet net-tools nano screen -y
+# Install SSH
+apt install -y openssh-server
+systemctl enable ssh
+systemctl start ssh
 
-clear
-figlet "ZAW VPS"
+# Install tools
+apt install -y curl wget cron
 
-echo "Installing SSH Manager..."
-sleep 2
+# Get IP
+IP=$(curl -s ifconfig.me)
 
-# Create menu system
-cat <<EOF > /usr/bin/menu
+# Create menu
+cat > /usr/bin/menu << END
 #!/bin/bash
 clear
 echo "=============================="
-echo "        ZAW VPS MANAGER"
+echo "      NETMOD VPN PANEL"
 echo "=============================="
-echo "1. Create SSH User"
-echo "2. Delete SSH User"
-echo "3. List SSH Users"
-echo "4. Restart SSH"
-echo "5. Server Info"
+echo "1. Create SSH Account"
+echo "2. Create Trial Account"
+echo "3. Delete User"
+echo "4. Check Login User"
+echo "5. Restart SSH"
 echo "0. Exit"
 echo "=============================="
-read -p "Select: " option
+read -p "Select Menu : " menu
 
-case \$option in
-
+case \$menu in
 1)
-read -p "Username: " user
-read -p "Password: " pass
-useradd -e \$(date -d "+7 days" +"%Y-%m-%d") -s /bin/false -M \$user
+read -p "Username : " user
+read -p "Password : " pass
+read -p "Expired (days): " days
+useradd -e \$(date -d "\$days days" +"%Y-%m-%d") -s /bin/false -M \$user
 echo "\$user:\$pass" | chpasswd
-echo "User Created Successfully"
+
+echo "=============================="
+echo "SSH ACCOUNT CREATED"
+echo "Host : $IP"
+echo "Port : 22"
+echo "Username : \$user"
+echo "Password : \$pass"
+echo "=============================="
 ;;
 
 2)
-read -p "Username: " user
+user=trial\$(tr -dc A-Z0-9 </dev/urandom | head -c4)
+pass=123
+useradd -e \$(date -d "1 day" +"%Y-%m-%d") -s /bin/false -M \$user
+echo "\$user:\$pass" | chpasswd
+
+echo "=============================="
+echo "TRIAL ACCOUNT"
+echo "Host : $IP"
+echo "Port : 22"
+echo "Username : \$user"
+echo "Password : \$pass"
+echo "=============================="
+;;
+
+3)
+read -p "Username : " user
 userdel \$user
 echo "User Deleted"
 ;;
 
-3)
-cut -d: -f1 /etc/passwd
-;;
-
 4)
-systemctl restart ssh
-echo "SSH Restarted"
+who
 ;;
 
 5)
-echo "Server IP:"
-curl ifconfig.me
-uptime
+systemctl restart ssh
+echo "SSH Restarted"
 ;;
 
 0)
@@ -77,18 +88,18 @@ exit
 ;;
 
 *)
-echo "Invalid Option"
+echo "Invalid"
 ;;
-
 esac
-EOF
+END
 
 chmod +x /usr/bin/menu
 
 clear
 echo "================================="
-echo " INSTALL COMPLETE"
+echo "INSTALL COMPLETE"
 echo "================================="
-echo ""
-echo "Command: menu"
-echo ""
+echo "Command : menu"
+echo "Server IP : $IP"
+echo "SSH Port : 22"
+echo "================================="
