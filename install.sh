@@ -1,105 +1,70 @@
 #!/bin/bash
 
 clear
-echo "================================="
-echo "     ZAW NETMOD VPN INSTALL"
-echo "================================="
+echo "================================"
+echo "        ZAW VPN PANEL"
+echo "================================"
 
-# Update server
 apt update -y
-apt upgrade -y
+apt install -y nginx curl wget
 
-# Install packages
-apt install -y openssh-server curl wget cron
+systemctl enable nginx
+systemctl start nginx
 
-systemctl enable ssh
-systemctl restart ssh
-
-IP=$(curl -s ifconfig.me)
-
-# Create menu
 cat > /usr/bin/menu << 'EOF'
 #!/bin/bash
-
-IP=$(curl -s ifconfig.me)
-
 clear
-echo "================================="
-echo "        ZAW VPS PANEL"
-echo "================================="
-echo "1. Create SSH Account"
-echo "2. Create Trial Account"
-echo "3. Delete SSH User"
-echo "4. List SSH Users"
-echo "5. Restart SSH"
-echo "6. Server Info"
-echo "0. Exit"
-echo "================================="
+
+echo "================================"
+echo "        ZAW VPN MANAGER"
+echo "================================"
+
+echo "01 SSH / WS MENU"
+echo "02 VMESS MENU"
+echo "03 VLESS MENU"
+echo "04 TROJAN MENU"
+echo "05 SOCKS MENU"
+echo "06 ZIVPN MENU"
+
+echo "---------------"
+echo "07 DNS PANEL"
+echo "08 DOMAIN PANEL"
+echo "09 IPV6 PANEL"
+echo "10 VPS STATUS"
+
+echo "88 REBOOT VPS"
+echo "00 EXIT"
+
 read -p "Select Menu : " menu
 
 case $menu in
 
 1)
-read -p "Username : " user
-read -p "Password : " pass
-read -p "Expired (days): " days
-
-exp=$(date -d "$days days" +"%Y-%m-%d")
-
-useradd -e $exp -s /bin/false -M $user
-echo "$user:$pass" | chpasswd
-
-clear
-echo "=============================="
-echo " SSH ACCOUNT CREATED"
-echo "=============================="
-echo "Host : $IP"
-echo "Port : 22"
-echo "Username : $user"
-echo "Password : $pass"
-echo "Expire : $exp"
-echo "=============================="
+echo "SSH MENU"
 ;;
 
 2)
-user=trial$(tr -dc A-Z0-9 </dev/urandom | head -c4)
-pass=123
-exp=$(date -d "1 day" +"%Y-%m-%d")
-
-useradd -e $exp -s /bin/false -M $user
-echo "$user:$pass" | chpasswd
-
-clear
-echo "=============================="
-echo " TRIAL ACCOUNT"
-echo "=============================="
-echo "Host : $IP"
-echo "Port : 22"
-echo "Username : $user"
-echo "Password : $pass"
-echo "Expire : $exp"
-echo "=============================="
+echo "VMESS MENU"
 ;;
 
 3)
-read -p "Input Username : " user
-userdel $user
-echo "User Deleted"
+echo "VLESS MENU"
 ;;
 
 4)
-echo "==== SSH USERS ===="
-cut -d: -f1 /etc/passwd
+echo "TROJAN MENU"
 ;;
 
 5)
-systemctl restart ssh
-echo "SSH Restarted"
+echo "SOCKS MENU"
 ;;
 
 6)
-echo "Server IP : $IP"
-echo "SSH Port : 22"
+echo "ZIVPN MENU"
+;;
+
+88)
+reboot
 ;;
 
 0)
@@ -115,11 +80,5 @@ EOF
 
 chmod +x /usr/bin/menu
 
-clear
-echo "================================="
-echo " INSTALL COMPLETE"
-echo "================================="
-echo "Command : menu"
-echo "Server IP : $IP"
-echo "Port : 22"
-echo "================================="
+echo "Install Complete"
+echo "Type : menu"
