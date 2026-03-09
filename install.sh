@@ -7,51 +7,36 @@ exit 1
 fi
 
 clear
-echo "===================================="
-echo "      ZAW SSH MANAGER INSTALL"
-echo "===================================="
-
+echo "================================="
+echo "      ZAW VPS INSTALLER"
+echo "================================="
 sleep 2
 
-# Update System
+# Update system
 apt update -y
 apt upgrade -y
 
-# Install Basic Packages
-apt install wget curl figlet screen unzip -y
+# Install required packages
+apt install wget curl figlet net-tools nano screen -y
 
 clear
-figlet "ZAW VPN"
+figlet "ZAW VPS"
 
-echo "Installing Required Packages..."
+echo "Installing SSH Manager..."
 sleep 2
 
-apt install python3 python3-pip -y
-apt install net-tools -y
-apt install socat -y
-apt install cron -y
-
-clear
-echo "Setting Firewall"
-
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw allow 8080/tcp
-
-clear
-echo "Creating Menu System..."
-
-cat <<EOF >/usr/bin/menu
+# Create menu system
+cat <<EOF > /usr/bin/menu
 #!/bin/bash
 clear
 echo "=============================="
-echo "       ZAW VPS MANAGER"
+echo "        ZAW VPS MANAGER"
 echo "=============================="
 echo "1. Create SSH User"
 echo "2. Delete SSH User"
-echo "3. List Users"
+echo "3. List SSH Users"
 echo "4. Restart SSH"
+echo "5. Server Info"
 echo "0. Exit"
 echo "=============================="
 read -p "Select: " option
@@ -63,7 +48,7 @@ read -p "Username: " user
 read -p "Password: " pass
 useradd -e \$(date -d "+7 days" +"%Y-%m-%d") -s /bin/false -M \$user
 echo "\$user:\$pass" | chpasswd
-echo "User Created"
+echo "User Created Successfully"
 ;;
 
 2)
@@ -81,12 +66,18 @@ systemctl restart ssh
 echo "SSH Restarted"
 ;;
 
+5)
+echo "Server IP:"
+curl ifconfig.me
+uptime
+;;
+
 0)
 exit
 ;;
 
 *)
-echo "Invalid"
+echo "Invalid Option"
 ;;
 
 esac
@@ -95,9 +86,9 @@ EOF
 chmod +x /usr/bin/menu
 
 clear
-echo "===================================="
+echo "================================="
 echo " INSTALL COMPLETE"
-echo "===================================="
+echo "================================="
 echo ""
-echo "Main Command: menu"
+echo "Command: menu"
 echo ""
